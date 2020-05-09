@@ -19,6 +19,6 @@ their behaviour customized depending on additional view data specified inside th
 This sample also shows how to make the user request new items to be added to the list via POST.
 
 
-Project: https://github.com/dynamic-mvl/dvml
+Project: https://github.com/dynamic-vml/dvml
 
-Website: https://dynamic-mvl.github.io/
+Website: https://dynamic-vml.github.io/

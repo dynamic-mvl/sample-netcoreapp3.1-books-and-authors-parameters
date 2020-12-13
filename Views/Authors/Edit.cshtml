@@ -30,10 +30,13 @@
                     // specify a more fancy custom template so we can control the item's display
                     itemContainerTemplate: "CustomItemTemplateWithMyOptions",
 
-                    // specify a list template so we can customize the "Add" button
+                    // specify a list container template so we can customize the "Add" button
                     listContainerTemplate: "CustomListTemplateWithFancyButton",
-
-                    method: NewItemMethod.Post)
+                    method: NewItemMethod.Post,
+                    additionalViewData: new
+                    {
+                        ButtonClass = "btn-danger"
+                    })
 
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

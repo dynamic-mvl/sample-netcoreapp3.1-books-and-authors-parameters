@@ -131,6 +131,7 @@ namespace BookAuthors.Controllers
                     {
                         Title = $"{author.FirstName}'s {b.Title}",
                         Subtitle = $"Published in {b.PublicationYear}",
+                        CanRemove = true
                     }
                 )
             };
@@ -152,6 +153,39 @@ namespace BookAuthors.Controllers
                     PublicationYear = b.PublicationYear
                 }).ToList()
             };
+        }
+
+        private static void updateModel(Author model, AuthorViewModel viewModel)
+        {
+            model.FirstName = viewModel.FirstName;
+            model.LastName = viewModel.LastName;
+
+            // Note: There are better ways to update collections from viewmodels, such as AutoMapper.Collections. This is just an example
+            List<BookViewModel> booksToAdd = viewModel.Books.ViewModels.Where(x => !model.Books.Select(y => y.Id).Contains(x.Id)).ToList();
+            List<Book> booksToRemove = model.Books.Where(x => !viewModel.Books.Select(y => y.ViewModel.Id).Contains(x.Id)).ToList();
+            List<Book> booksToUpdate = model.Books.Where(x => viewModel.Books.Select(y => y.ViewModel.Id).Contains(x.Id)).ToList();
+
+            foreach (Book book in booksToRemove)
+            {
+                model.Books.Remove(book);
+            }
+
+            foreach (BookViewModel bookViewModel in booksToAdd)
+            {
+                model.Books.Add(new Book
+                {
+                    Id = bookViewModel.Id,
+                    Title = bookViewModel.Title,
+                    PublicationYear = bookViewModel.PublicationYear
+                });
+            }
+
+            foreach (Book book in booksToUpdate)
+            {
+                BookViewModel bookViewModel = viewModel.Books.ViewModels.Where(x => x.Id == book.Id).Single();
+                book.Title = bookViewModel.Title;
+                book.PublicationYear = bookViewModel.PublicationYear;
+            }
         }
 
 
@@ -229,28 +263,25 @@ namespace BookAuthors.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, AuthorViewModel author)
+        public async Task<IActionResult> Edit(int id, AuthorViewModel viewModel)
         {
-            if (id != author.Id)
+            if (id != viewModel.Id)
                 return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(viewModelToModel(author));
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AuthorExists(author.Id))
-                        return NotFound();
-                    throw;
-                }
+                Author author = await _context.Author
+                    .Include(x => x.Books)
+                    .FirstOrDefaultAsync(m => m.Id == id);
+
+                updateModel(author, viewModel);
+                _context.Update(author);
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(author);
+            return View(viewModel);
         }
 
         // GET: Authors/Delete/5
